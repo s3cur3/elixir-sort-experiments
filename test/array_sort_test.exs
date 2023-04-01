@@ -1,6 +1,6 @@
 defmodule ArraySortTest do
   use ExUnit.Case, async: true
-  import ArraySort, only: [merge_sort: 1, halve_arr: 2, concat: 2]
+  import ArraySort, only: [merge_sort: 1]
 
   @tag benchmark: true
   test "extremely rough benchmark" do
@@ -39,45 +39,5 @@ defmodule ArraySortTest do
       to_sort = sorted |> Enum.shuffle()
       assert merge_sort(to_sort) == sorted
     end
-  end
-
-  test "halve_arr size 2" do
-    to_halve =
-      1..2
-      |> Enum.to_list()
-      |> :array.from_list()
-
-    {left, right} = halve_arr(to_halve, 2)
-    assert :array.to_list(left) == [1]
-    assert :array.to_list(right) == [2]
-  end
-
-  test "halve_arr size 3" do
-    to_halve =
-      1..3
-      |> Enum.to_list()
-      |> :array.from_list()
-
-    {left, right} = halve_arr(to_halve, 3)
-    assert :array.to_list(left) == [1]
-    assert :array.to_list(right) == [2, 3]
-  end
-
-  test "halve_arr size 4" do
-    to_halve =
-      1..4
-      |> Enum.to_list()
-      |> :array.from_list()
-
-    {left, right} = halve_arr(to_halve, 4)
-    assert :array.to_list(left) == [1, 2]
-    assert :array.to_list(right) == [3, 4]
-  end
-
-  test "concat size 4" do
-    l = :array.from_list([1, 2])
-    r = :array.from_list([3, 4])
-    joined = concat(l, r)
-    assert :array.to_list(joined) == [1, 2, 3, 4]
   end
 end
