@@ -8,6 +8,10 @@ on to [`:array.array()`][1]) would be more efficient overall than
 doing a merge sort on lists, as Erlang's [`:list.sort/1`][2] and
 thus Elixir's [`Enum.sort/1`][3] do under the hood.
 
+(See [`ArraySort`](lib/array_sort.ex) for the core, and
+[`ArraySlice`](lib/array_slice.ex) for the structure I used
+to cut down a bit on copies.)
+
 Boy was I wrong!
 
 Comparing a list of 10,000 elements, the current implementation
