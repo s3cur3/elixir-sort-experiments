@@ -72,7 +72,7 @@ defmodule ArraySlice do
           val_left = :array.get(idx_left, array_l)
           # Take as many from the right as are smaller than val_left, then val_left
           {acc, right, new_insertion_idx} =
-            take_until_greater_or_equal(
+            take_while_less_than(
               %{right | base_idx: idx_right},
               val_left,
               acc,
@@ -105,8 +105,8 @@ defmodule ArraySlice do
 
   defp take_all(_slice, acc, _insertion_idx), do: acc
 
-  @spec take_until_greater_or_equal(t(), any, :array.array(), integer) :: {:array.array(), t(), integer}
-  defp take_until_greater_or_equal(
+  @spec take_while_less_than(t(), any, :array.array(), integer) :: {:array.array(), t(), integer}
+  defp take_while_less_than(
          %__MODULE__{array: arr, base_idx: check_idx, end_idx: end_idx} = slice,
          less_than_val,
          acc,
@@ -120,7 +120,7 @@ defmodule ArraySlice do
       updated_slice = %{slice | base_idx: check_next}
 
       if check_next < end_idx do
-        take_until_greater_or_equal(updated_slice, less_than_val, acc, insertion_idx + 1)
+        take_while_less_than(updated_slice, less_than_val, acc, insertion_idx + 1)
       else
         {acc, updated_slice, insertion_idx + 1}
       end
