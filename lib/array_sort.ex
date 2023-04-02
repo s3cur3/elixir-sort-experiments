@@ -26,10 +26,10 @@ defmodule ArraySort do
     end
   end
 
-  @spec merge_sort_arr_slice(ArraySlice.t()) :: :array.array()
+  @spec merge_sort_arr_slice(ArraySlice.t()) :: :array.array() | ArraySlice.t()
   def merge_sort_arr_slice(%ArraySlice{size: size} = slice) do
     if size <= 1 do
-      ArraySlice.reify(slice)
+      slice
     else
       {left, right} = ArraySlice.halve(slice)
       a = merge_sort_arr_slice(left)

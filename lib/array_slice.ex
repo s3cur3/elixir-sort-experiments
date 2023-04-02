@@ -12,6 +12,11 @@ defmodule ArraySlice do
     %__MODULE__{array: array, base_idx: base_idx, end_idx: end_idx, size: end_idx - base_idx}
   end
 
+  def new(array) do
+    size = :array.size(array)
+    %__MODULE__{array: array, base_idx: 0, end_idx: size, size: size}
+  end
+
   @spec reify(t()) :: :array.array()
   def reify(%__MODULE__{array: array, base_idx: base_idx, end_idx: end_idx}) do
     cond do
@@ -52,52 +57,59 @@ defmodule ArraySlice do
     {left, right}
   end
 
-  @spec merge(:array.array(), :array.array(), :array.array()) :: :array.array()
-  def merge(left, right, acc) do
-    right_size = :array.size(right)
+  @spec merge(:array.array() | t(), :array.array() | t(), :array.array()) :: :array.array()
+  def merge(left, right, acc \\ :array.new())
 
-    # IO.inspect(:array.to_list(left), label: "merging left", charlists: :as_lists)
-    # IO.inspect(:array.to_list(right), label: "merging right", charlists: :as_lists)
+  @spec merge(t(), t(), :array.array()) :: :array.array()
+  def merge(
+        %__MODULE__{array: array_l, base_idx: base_idx_l, end_idx: end_idx_l} = left,
+        %__MODULE__{array: array_r, base_idx: base_idx_r, end_idx: end_idx_r} = right,
+        acc
+      ) do
+    # IO.inspect(reify_list(left), label: "merging left", charlists: :as_lists)
+    # IO.inspect(reify_list(right), label: "merging right", charlists: :as_lists)
 
     {insertion_idx, idx_right, merged} =
-      :array.foldl(
-        fn
-          _idx_left, val_left, {insertion_idx, idx_right, acc} when idx_right < right_size ->
-            # Take as many from the right as are smaller than val_left, then val_left
-            {acc, new_idx_right, new_insertion_idx} =
-              take_until_greater_or_equal(
-                right,
-                idx_right,
-                right_size,
-                val_left,
-                acc,
-                insertion_idx
-              )
+      Enum.reduce(base_idx_l..(end_idx_l - 1), {0, base_idx_r, acc}, fn
+        idx_left, {insertion_idx, idx_right, acc} when idx_right < end_idx_r ->
+          val_left = :array.get(idx_left, array_l)
+          # Take as many from the right as are smaller than val_left, then val_left
+          {acc, new_idx_right, new_insertion_idx} =
+            take_until_greater_or_equal(
+              array_r,
+              idx_right,
+              end_idx_r,
+              val_left,
+              acc,
+              insertion_idx
+            )
 
-            # IO.inspect(new_insertion_idx - insertion_idx,
-            #   label: "took from right"
-            # )
+          # IO.inspect(new_insertion_idx - insertion_idx,
+          #   label: "took from right"
+          # )
 
-            updated_acc = :array.set(new_insertion_idx, val_left, acc)
-            # IO.inspect(:array.to_list(updated_acc), label: "updated_acc")
-            {new_insertion_idx + 1, new_idx_right, updated_acc}
+          updated_acc = :array.set(new_insertion_idx, val_left, acc)
+          # IO.inspect(:array.to_list(updated_acc), label: "updated_acc")
 
-          _idx_left, val_left, {insertion_idx, idx_right, acc} ->
-            # Take val_left, since we're out of right
-            # IO.inspect(val_left, label: "taking val_left since we're out of right")
-            {insertion_idx + 1, idx_right, :array.set(insertion_idx, val_left, acc)}
-        end,
-        {0, 0, acc},
-        left
-      )
+          {new_insertion_idx + 1, new_idx_right, updated_acc}
+
+        idx_left, {insertion_idx, idx_right, acc} ->
+          # Take val_left, since we're out of right
+          val_left = :array.get(idx_left, array_l)
+          # IO.inspect(val_left, label: "taking val_left since we're out of right")
+          {insertion_idx + 1, idx_right, :array.set(insertion_idx, val_left, acc)}
+      end)
 
     # IO.inspect(:array.to_list(merged), label: "merged")
 
-    fully_merged = take_all(right, idx_right, right_size, merged, insertion_idx)
-
+    fully_merged = take_all(array_r, idx_right, end_idx_r, merged, insertion_idx)
     # IO.inspect(:array.to_list(fully_merged), label: "fully_merged")
     fully_merged
   end
+
+  def merge(left, %__MODULE__{} = right, acc), do: merge(new(left), right, acc)
+  def merge(%__MODULE__{} = left, right, acc), do: merge(left, new(right), acc)
+  def merge(left, right, acc), do: merge(new(left), new(right), acc)
 
   @spec take_all(:array.array(), integer, integer, :array.array(), integer) :: :array.array()
   defp take_all(arr, base_idx, end_idx, acc, insertion_idx)
