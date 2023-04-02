@@ -9,32 +9,18 @@ defmodule ArraySort do
   def merge_sort(list) when is_list(list) do
     list
     |> :array.from_list()
-    |> merge_sort_arr()
-    |> :array.to_list()
-  end
-
-  def merge_sort_arr(array) do
-    size = :array.size(array)
-
-    if size <= 1 do
-      array
-    else
-      {left, right} = ArraySlice.halve(array, size)
-      a = merge_sort_arr_slice(left)
-      b = merge_sort_arr_slice(right)
-      ArraySlice.merge(a, b, :array.new())
-    end
+    |> ArraySlice.new()
+    |> merge_sort_arr_slice()
+    |> ArraySlice.to_list()
   end
 
   @spec merge_sort_arr_slice(ArraySlice.t()) :: :array.array() | ArraySlice.t()
-  def merge_sort_arr_slice(%ArraySlice{size: size} = slice) do
-    if size <= 1 do
-      slice
-    else
-      {left, right} = ArraySlice.halve(slice)
-      a = merge_sort_arr_slice(left)
-      b = merge_sort_arr_slice(right)
-      ArraySlice.merge(a, b, :array.new())
-    end
+  def merge_sort_arr_slice(%ArraySlice{size: 1} = slice), do: slice
+
+  def merge_sort_arr_slice(%ArraySlice{} = slice) do
+    {left, right} = ArraySlice.halve(slice)
+    a = merge_sort_arr_slice(left)
+    b = merge_sort_arr_slice(right)
+    ArraySlice.merge(a, b)
   end
 end
